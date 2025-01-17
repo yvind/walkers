@@ -1,7 +1,6 @@
 use crate::{
     center::Center,
-    projector::Projector,
-    units::{AdjustedPosition, Position},
+    units::Position,
     zoom::{InvalidZoom, Zoom},
 };
 
@@ -18,35 +17,30 @@ impl MapMemory {
         self.zoom.into()
     }
 
-    pub fn zoom_in(&mut self, projector: &Projector) -> Result<(), InvalidZoom> {
-        self.center_mode = self.center_mode.clone().zero_offset(projector);
+    pub fn zoom_in(&mut self) -> Result<(), InvalidZoom> {
         self.zoom.zoom_in()
     }
 
     /// Try to zoom out, returning `Err(InvalidZoom)` if already at minimum.
-    pub fn zoom_out(&mut self, projector: &Projector) -> Result<(), InvalidZoom> {
-        self.center_mode = self.center_mode.clone().zero_offset(projector);
+    pub fn zoom_out(&mut self) -> Result<(), InvalidZoom> {
         self.zoom.zoom_out()
     }
 
     /// Set exact zoom level
-    pub fn set_zoom(&mut self, zoom: f64, projector: &Projector) -> Result<(), InvalidZoom> {
-        self.center_mode = self.center_mode.clone().zero_offset(projector);
+    pub fn set_zoom(&mut self, zoom: f64) -> Result<(), InvalidZoom> {
         self.zoom = Zoom::try_from(zoom)?;
         Ok(())
     }
 
     /// Returns exact position if map is detached (i.e. not following `my_position`),
     /// `None` otherwise.
-    pub fn detached(&self, projector: &Projector) -> Option<Position> {
-        self.center_mode.detached(projector)
+    pub fn detached(&self) -> Option<Position> {
+        self.center_mode.position()
     }
 
     /// Center exactly at the given position.
     pub fn center_at(&mut self, pos: Position) {
-        self.center_mode = Center::Exact {
-            adjusted_pos: AdjustedPosition::new(pos, Default::default()),
-        };
+        self.center_mode = Center::Exact { pos };
     }
 
     /// Follow `my_position`.

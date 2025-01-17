@@ -3,7 +3,7 @@ use egui::{PointerButton, Response, Sense, Ui, UiBuilder, Vec2, Widget};
 use crate::{
     center::Center,
     projector::{LocalProjector, Projector},
-    units::{AdjustedPosition, Position},
+    units::Position,
     MapMemory, Plugin,
 };
 
@@ -117,7 +117,8 @@ impl LocalMap<'_, '_> {
             let pos = self
                 .memory
                 .center_mode
-                .position(self.my_position, &self.projector);
+                .position()
+                .unwrap_or(self.my_position);
 
             // While zooming, we want to keep the location under the mouse pointer fixed on the
             // screen. To achieve this, we first move the location to the widget's center,
@@ -125,9 +126,7 @@ impl LocalMap<'_, '_> {
             // position.
             if let Some(offset) = offset {
                 self.memory.center_mode = Center::Exact {
-                    adjusted_pos: self
-                        .projector
-                        .zero_offset(AdjustedPosition::from(pos).shift(-offset)),
+                    pos: self.projector.shift(pos, -offset),
                 };
             }
 
@@ -137,11 +136,8 @@ impl LocalMap<'_, '_> {
                 .zoom
                 .zoom_by((zoom_delta - 1.) * self.zoom_speed);
 
-            // Recalculate the AdjustedPosition's offset, since it gets invalidated by zooming.
-            self.memory.center_mode = self.memory.center_mode.clone().zero_offset(&self.projector);
-
-            if let Some(offset) = offset {
-                self.memory.center_mode = self.memory.center_mode.clone().shift(offset);
+            if offset.is_some() {
+                self.memory.center_mode = Center::Exact { pos };
             }
 
             changed = true;
@@ -162,9 +158,10 @@ impl LocalMap<'_, '_> {
                 let pos = self
                     .memory
                     .center_mode
-                    .position(self.my_position, &self.projector);
+                    .position()
+                    .unwrap_or(self.my_position);
                 self.memory.center_mode = Center::Exact {
-                    adjusted_pos: AdjustedPosition::from(pos).shift(scroll_delta),
+                    pos: self.projector.shift(pos, scroll_delta),
                 };
             }
         }
@@ -180,7 +177,7 @@ impl Widget for LocalMap<'_, '_> {
         self.projector.set_clip_rect(rect);
 
         let mut moved = self.handle_gestures(ui, &response);
-        moved |= self.memory.center_mode.update_movement();
+        moved |= self.memory.center_mode.update_movement(&self.projector);
 
         if moved {
             response.mark_changed();
