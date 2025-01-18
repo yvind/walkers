@@ -90,7 +90,7 @@ pub(crate) trait ProjectorTrait {
     fn set_clip_rect(&mut self, rect: egui::Rect);
 
     fn shift(&self, pos: Position, offset: egui::Vec2) -> Position {
-        self.bitmap_unproject(self.bitmap_project(pos) + offset)
+        self.bitmap_unproject(self.bitmap_project(pos) - offset)
     }
 }
 

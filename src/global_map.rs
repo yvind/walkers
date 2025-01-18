@@ -154,7 +154,7 @@ impl Map<'_, '_, '_> {
             // position.
             if let Some(offset) = offset {
                 self.memory.center_mode = Center::Exact {
-                    pos: self.projector.shift(pos, -offset),
+                    pos: self.projector.shift(pos, offset),
                 };
             }
 
