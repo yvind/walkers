@@ -1,7 +1,6 @@
 use crate::{
     center::Center,
-    projector::Projector,
-    units::{AdjustedPosition, Position},
+    units::Position,
     zoom::{InvalidZoom, Zoom},
 };
 

@@ -1,5 +1,3 @@
-use std::ops::{Add, Sub};
-
 /// Position in some coordinates, either latitude and longitude or local projected coordinate system.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Position(geo_types::Point);

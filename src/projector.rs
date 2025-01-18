@@ -1,8 +1,4 @@
-use crate::{
-    map_memory::MapMemory,
-    tiles::TileId,
-    units::{AdjustedPosition, Pixel, Position},
-};
+use crate::{map_memory::MapMemory, tiles::TileId, units::Position};
 
 /// A Projector relates Positions to screen coordinates
 /// two projectors are supported.
@@ -66,8 +62,8 @@ impl ProjectorTrait for Projector {
 
     fn position(&self, adjusted_pos: AdjustedPosition) -> Position {
         match self {
-            Projector::Global(global_projector) => global_projector.position(adjusted_pos),
-            Projector::Local(local_projector) => local_projector.position(adjusted_pos),
+            Projector::Global(global_projector) => global_projector.shift(pos, offset),
+            Projector::Local(local_projector) => local_projector.shift(pos, offset),
         }
     }
 
@@ -155,6 +151,7 @@ impl ProjectorTrait for LocalProjector {
         self.clip_rect = rect;
     }
 
+
     fn tile_id(&self, _pos: Position, _zoom: u8, _tile_size: u32) -> Option<TileId> {
         None
     }
@@ -170,6 +167,7 @@ impl ProjectorTrait for LocalProjector {
 
     fn bitmap_unproject(&self, pos: Pixel) -> Position {
         let units_per_point = Self::units_per_point(self.memory.zoom());
+
 
         Position::new(pos.x() * units_per_point, -pos.y() * units_per_point)
     }

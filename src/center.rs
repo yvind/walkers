@@ -5,6 +5,7 @@ use crate::{
     units::{AdjustedPosition, Position},
 };
 
+
 /// Position at the map's center. Initially, the map follows `my_position` argument which typically
 /// is meant to be fed by a GPS sensor or other geo-localization method. If user drags the map,
 /// it becomes "detached" and stays this way until [`MapMemory::center_mode`] is changed back to
@@ -16,17 +17,14 @@ pub(crate) enum Center {
     MyPosition,
 
     /// Centered exactly here
-    Exact { adjusted_pos: AdjustedPosition },
+    Exact { pos: Position },
 
     /// Map is currently being dragged.
-    Moving {
-        adjusted_pos: AdjustedPosition,
-        direction: Vec2,
-    },
+    Moving { pos: Position, direction: Vec2 },
 
     /// Map is currently moving due to inertia, and will slow down and stop after a short while.
     Inertia {
-        adjusted_pos: AdjustedPosition,
+        pos: Position,
         direction: Vec2,
         amount: f32,
     },
@@ -36,20 +34,14 @@ impl Center {
     pub(crate) fn recalculate_drag(&mut self, response: &Response, my_position: Position) -> bool {
         if response.dragged_by(egui::PointerButton::Primary) {
             *self = Center::Moving {
-                adjusted_pos: self
-                    .adjusted_position()
-                    .unwrap_or(AdjustedPosition::new(my_position, Default::default())),
+                pos: self.position().unwrap_or(my_position),
                 direction: response.drag_delta(),
             };
             true
         } else if response.drag_stopped() {
-            if let Center::Moving {
-                adjusted_pos,
-                direction,
-            } = &self
-            {
+            if let Center::Moving { pos, direction } = &self {
                 *self = Center::Inertia {
-                    adjusted_pos: adjusted_pos.to_owned(),
+                    pos: pos.to_owned(),
                     direction: *direction,
                     amount: 1.0,
                 };
@@ -60,31 +52,28 @@ impl Center {
         }
     }
 
-    pub(crate) fn update_movement(&mut self) -> bool {
+    pub(crate) fn update_movement(&mut self, projector: &Projector) -> bool {
         match self {
-            Center::Moving {
-                adjusted_pos,
-                direction,
-            } => {
+            Center::Moving { pos, direction } => {
                 let delta = *direction;
 
-                *adjusted_pos = adjusted_pos.to_owned().shift(delta);
+                *pos = projector.shift(pos.to_owned(), delta);
 
                 true
             }
             Center::Inertia {
-                adjusted_pos,
+                pos,
                 direction,
                 amount,
             } => {
                 if amount <= &mut 0.0 {
                     *self = Center::Exact {
-                        adjusted_pos: adjusted_pos.to_owned(),
+                        pos: pos.to_owned(),
                     }
                 } else {
                     let delta = *direction * *amount;
 
-                    *adjusted_pos = adjusted_pos.to_owned().shift(delta);
+                    projector.shift(pos.to_owned(), delta);
                 };
                 true
             }
@@ -106,60 +95,9 @@ impl Center {
     pub(crate) fn adjusted_position(&self) -> Option<AdjustedPosition> {
         match self {
             Center::MyPosition => None,
-            Center::Exact { adjusted_pos }
-            | Center::Moving { adjusted_pos, .. }
-            | Center::Inertia { adjusted_pos, .. } => Some(adjusted_pos.to_owned()),
-        }
-    }
-
-    /// Shift position by given number of pixels, if detached.
-    pub(crate) fn shift(self, shift_offset: Vec2) -> Self {
-        match self {
-            Center::MyPosition => Center::MyPosition,
-            Center::Exact { adjusted_pos } => Center::Exact {
-                adjusted_pos: adjusted_pos.shift(shift_offset),
-            },
-            Center::Moving {
-                adjusted_pos,
-                direction,
-            } => Center::Moving {
-                adjusted_pos: adjusted_pos.shift(shift_offset),
-                direction,
-            },
-            Center::Inertia {
-                adjusted_pos,
-                direction,
-                amount,
-            } => Center::Inertia {
-                adjusted_pos: adjusted_pos.shift(shift_offset),
-                direction,
-                amount,
-            },
-        }
-    }
-
-    pub fn zero_offset(self, projector: &Projector) -> Self {
-        match self {
-            Center::MyPosition => Center::MyPosition,
-            Center::Exact { adjusted_pos } => Center::Exact {
-                adjusted_pos: projector.zero_offset(adjusted_pos),
-            },
-            Center::Moving {
-                adjusted_pos,
-                direction,
-            } => Center::Moving {
-                adjusted_pos: projector.zero_offset(adjusted_pos),
-                direction,
-            },
-            Center::Inertia {
-                adjusted_pos,
-                direction,
-                amount,
-            } => Center::Inertia {
-                adjusted_pos: projector.zero_offset(adjusted_pos),
-                direction,
-                amount,
-            },
+            Center::Exact { pos } | Center::Moving { pos, .. } | Center::Inertia { pos, .. } => {
+                Some(pos.to_owned())
+            }
         }
     }
 }
