@@ -1,6 +1,7 @@
 use crate::{
     center::Center,
-    units::Position,
+    projector::Projector,
+    units::{AdjustedPosition, Position},
     zoom::{InvalidZoom, Zoom},
 };
 
@@ -44,7 +45,7 @@ impl MapMemory {
     /// Center exactly at the given position.
     pub(crate) fn center_at(&mut self, pos: Position) {
         self.center_mode = Center::Exact {
-            adjusted_pos: AdjustedPosition::new(pos, Default::default()),
+            pos: AdjustedPosition::new(pos, Default::default()),
         };
     }
 

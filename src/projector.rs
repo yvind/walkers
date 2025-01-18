@@ -1,4 +1,8 @@
-use crate::{map_memory::MapMemory, tiles::TileId, units::Position};
+use crate::{
+    map_memory::MapMemory,
+    tiles::TileId,
+    units::{AdjustedPosition, Pixel, Position},
+};
 
 /// A Projector relates Positions to screen coordinates
 /// two projectors are supported.
@@ -9,6 +13,28 @@ pub enum Projector {
     /// Local is used for local coordinates were Positions are euclidean x and y values in
     /// some arbitrary units and the projection is an affine transformation
     Local(LocalProjector),
+}
+
+pub(crate) trait ProjectorTrait {
+    // used within crate
+    fn tile_id(&self, pos: Position, zoom: u8, tile_size: u32) -> Option<TileId>;
+    fn set_clip_rect(&mut self, rect: egui::Rect);
+
+    fn position(&self, adjusted_pos: AdjustedPosition) -> Position {
+        self.bitmap_unproject(self.bitmap_project(adjusted_pos.position) - adjusted_pos.offset)
+    }
+    //
+    fn zero_offset(&self, adjusted_pos: AdjustedPosition) -> AdjustedPosition {
+        AdjustedPosition {
+            position: self.position(adjusted_pos),
+            offset: Default::default(),
+        }
+    }
+
+    fn bitmap_project(&self, position: Position) -> Pixel;
+    fn bitmap_unproject(&self, pos: Pixel) -> Position;
+    fn bitmap_to_screen(&self, pos: Pixel) -> egui::Pos2;
+    fn bitmap_from_screen(&self, pos: egui::Pos2) -> Pixel;
 }
 
 impl Projector {
@@ -60,13 +86,6 @@ impl ProjectorTrait for Projector {
         }
     }
 
-    fn position(&self, adjusted_pos: AdjustedPosition) -> Position {
-        match self {
-            Projector::Global(global_projector) => global_projector.shift(pos, offset),
-            Projector::Local(local_projector) => local_projector.shift(pos, offset),
-        }
-    }
-
     fn zero_offset(&self, adjusted_pos: AdjustedPosition) -> AdjustedPosition {
         match &self {
             Projector::Global(global_projector) => global_projector.zero_offset(adjusted_pos),
@@ -103,28 +122,6 @@ impl ProjectorTrait for Projector {
     }
 }
 
-pub(crate) trait ProjectorTrait {
-    // used within crate
-    fn tile_id(&self, pos: Position, zoom: u8, tile_size: u32) -> Option<TileId>;
-    fn set_clip_rect(&mut self, rect: egui::Rect);
-
-    fn position(&self, adjusted_pos: AdjustedPosition) -> Position {
-        self.bitmap_unproject(self.bitmap_project(adjusted_pos.position) - adjusted_pos.offset)
-    }
-    //
-    fn zero_offset(&self, adjusted_pos: AdjustedPosition) -> AdjustedPosition {
-        AdjustedPosition {
-            position: self.position(adjusted_pos),
-            offset: Default::default(),
-        }
-    }
-
-    fn bitmap_project(&self, position: Position) -> Pixel;
-    fn bitmap_unproject(&self, pos: Pixel) -> Position;
-    fn bitmap_to_screen(&self, pos: Pixel) -> egui::Pos2;
-    fn bitmap_from_screen(&self, pos: egui::Pos2) -> Pixel;
-}
-
 #[derive(Clone)]
 pub struct LocalProjector {
     pub(crate) clip_rect: egui::Rect,
@@ -151,7 +148,6 @@ impl ProjectorTrait for LocalProjector {
         self.clip_rect = rect;
     }
 
-
     fn tile_id(&self, _pos: Position, _zoom: u8, _tile_size: u32) -> Option<TileId> {
         None
     }
@@ -167,7 +163,6 @@ impl ProjectorTrait for LocalProjector {
 
     fn bitmap_unproject(&self, pos: Pixel) -> Position {
         let units_per_point = Self::units_per_point(self.memory.zoom());
-
 
         Position::new(pos.x() * units_per_point, -pos.y() * units_per_point)
     }

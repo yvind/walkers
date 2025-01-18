@@ -6,6 +6,7 @@ use futures::channel::mpsc::{channel, Receiver, Sender, TrySendError};
 use image::ImageError;
 use lru::LruCache;
 
+use crate::units::Pixel;
 use crate::{
     download::{download_continuously, HttpOptions, MAX_PARALLEL_DOWNLOADS},
     io::Runtime,
@@ -298,7 +299,7 @@ impl TileId {
 pub(crate) fn flood_fill_tiles(
     viewport: Rect,
     tile_id: TileId,
-    map_center_projected_position: egui::Pos2,
+    map_center_projected_position: Pixel,
     zoom: f64,
     tiles: &mut dyn Tiles,
     meshes: &mut HashMap<TileId, Option<Mesh>>,
@@ -306,7 +307,8 @@ pub(crate) fn flood_fill_tiles(
     // We need to make up the difference between integer and floating point zoom levels.
     let corrected_tile_size = tiles.tile_size() as f64 * 2f64.powf(zoom - zoom.round());
     let tile_projected = tile_id.project(corrected_tile_size as f32);
-    let tile_screen_position = viewport.center() + (tile_projected - map_center_projected_position);
+    let tile_screen_position =
+        viewport.center() + (tile_projected - egui::Pos2::from(map_center_projected_position));
 
     if viewport.intersects(rect(tile_screen_position, corrected_tile_size)) {
         if let Entry::Vacant(entry) = meshes.entry(tile_id) {

@@ -1,10 +1,9 @@
 use egui::{Response, Vec2};
 
 use crate::{
-    projector::{Projector, ProjectorTrait},
+    projector::ProjectorTrait,
     units::{AdjustedPosition, Position},
 };
-
 
 /// Position at the map's center. Initially, the map follows `my_position` argument which typically
 /// is meant to be fed by a GPS sensor or other geo-localization method. If user drags the map,
@@ -17,14 +16,17 @@ pub(crate) enum Center {
     MyPosition,
 
     /// Centered exactly here
-    Exact { pos: Position },
+    Exact { pos: AdjustedPosition },
 
     /// Map is currently being dragged.
-    Moving { pos: Position, direction: Vec2 },
+    Moving {
+        pos: AdjustedPosition,
+        direction: Vec2,
+    },
 
     /// Map is currently moving due to inertia, and will slow down and stop after a short while.
     Inertia {
-        pos: Position,
+        pos: AdjustedPosition,
         direction: Vec2,
         amount: f32,
     },
@@ -34,7 +36,9 @@ impl Center {
     pub(crate) fn recalculate_drag(&mut self, response: &Response, my_position: Position) -> bool {
         if response.dragged_by(egui::PointerButton::Primary) {
             *self = Center::Moving {
-                pos: self.position().unwrap_or(my_position),
+                pos: self
+                    .adjusted_position()
+                    .unwrap_or(AdjustedPosition::new(my_position, Default::default())),
                 direction: response.drag_delta(),
             };
             true
@@ -52,12 +56,12 @@ impl Center {
         }
     }
 
-    pub(crate) fn update_movement(&mut self, projector: &Projector) -> bool {
+    pub(crate) fn update_movement(&mut self) -> bool {
         match self {
             Center::Moving { pos, direction } => {
                 let delta = *direction;
 
-                *pos = projector.shift(pos.to_owned(), delta);
+                *pos = pos.clone().shift(delta);
 
                 true
             }
@@ -73,7 +77,7 @@ impl Center {
                 } else {
                     let delta = *direction * *amount;
 
-                    projector.shift(pos.to_owned(), delta);
+                    *pos = pos.clone().shift(delta);
                 };
                 true
             }
@@ -98,6 +102,51 @@ impl Center {
             Center::Exact { pos } | Center::Moving { pos, .. } | Center::Inertia { pos, .. } => {
                 Some(pos.to_owned())
             }
+        }
+    }
+
+    pub fn zero_offset(self, projector: &impl ProjectorTrait) -> Self {
+        match self {
+            Center::MyPosition => Center::MyPosition,
+            Center::Exact { pos } => Center::Exact {
+                pos: projector.zero_offset(pos),
+            },
+            Center::Moving { pos, direction } => Center::Moving {
+                pos: projector.zero_offset(pos),
+                direction,
+            },
+            Center::Inertia {
+                pos,
+                direction,
+                amount,
+            } => Center::Inertia {
+                pos: projector.zero_offset(pos),
+                direction,
+                amount,
+            },
+        }
+    }
+
+    /// Shift position by given number of pixels, if detached.
+    pub(crate) fn shift(self, offset: Vec2) -> Self {
+        match self {
+            Center::MyPosition => Center::MyPosition,
+            Center::Exact { pos } => Center::Exact {
+                pos: pos.shift(offset),
+            },
+            Center::Moving { pos, direction } => Center::Moving {
+                pos: pos.shift(offset),
+                direction,
+            },
+            Center::Inertia {
+                pos,
+                direction,
+                amount,
+            } => Center::Inertia {
+                pos: pos.shift(offset),
+                direction,
+                amount,
+            },
         }
     }
 }

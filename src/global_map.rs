@@ -179,8 +179,7 @@ impl Map<'_, '_, '_> {
             let pos = self
                 .memory
                 .center_mode
-                .position()
-                .unwrap_or(self.my_position);
+                .position(self.my_position, &self.projector);
 
             // While zooming, we want to keep the location under the mouse pointer fixed on the
             // screen. To achieve this, we first move the location to the widget's center,
@@ -188,7 +187,9 @@ impl Map<'_, '_, '_> {
             // position.
             if let Some(offset) = offset {
                 self.memory.center_mode = Center::Exact {
-                    pos: self.projector.shift(pos, offset),
+                    pos: self
+                        .projector
+                        .zero_offset(AdjustedPosition::from(pos).shift(-offset)),
                 };
             }
 
@@ -198,8 +199,11 @@ impl Map<'_, '_, '_> {
                 .zoom
                 .zoom_by((zoom_delta - 1.) * self.zoom_speed);
 
-            if offset.is_some() {
-                self.memory.center_mode = Center::Exact { pos };
+            // Recalculate the AdjustedPosition's offset, since it gets invalidated by zooming.
+            self.memory.center_mode = self.memory.center_mode.clone().zero_offset(&self.projector);
+
+            if let Some(offset) = offset {
+                self.memory.center_mode = self.memory.center_mode.clone().shift(offset);
             }
 
             changed = true;
@@ -220,10 +224,9 @@ impl Map<'_, '_, '_> {
                 let pos = self
                     .memory
                     .center_mode
-                    .position()
-                    .unwrap_or(self.my_position);
+                    .position(self.my_position, &self.projector);
                 self.memory.center_mode = Center::Exact {
-                    pos: self.projector.shift(pos, scroll_delta),
+                    pos: AdjustedPosition::from(pos).shift(scroll_delta),
                 };
             }
         }
@@ -239,7 +242,7 @@ impl Widget for Map<'_, '_, '_> {
         self.projector.set_clip_rect(rect);
 
         let mut moved = self.handle_gestures(ui, &response);
-        moved |= self.memory.center_mode.update_movement(&self.projector);
+        moved |= self.memory.center_mode.update_movement();
 
         if moved {
             response.mark_changed();
@@ -250,8 +253,7 @@ impl Widget for Map<'_, '_, '_> {
         let map_center = self
             .memory
             .center_mode
-            .position()
-            .unwrap_or(self.my_position);
+            .position(self.my_position, &self.projector);
         let painter = ui.painter().with_clip_rect(rect);
 
         if let Some(tiles) = self.tiles {
