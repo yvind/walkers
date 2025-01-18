@@ -1,6 +1,10 @@
 use egui::{Response, Vec2};
 
-use crate::{units::Position, Projector};
+use crate::{
+    projector::{Projector, ProjectorTrait},
+    units::{AdjustedPosition, Position},
+};
+
 
 /// Position at the map's center. Initially, the map follows `my_position` argument which typically
 /// is meant to be fed by a GPS sensor or other geo-localization method. If user drags the map,
@@ -77,7 +81,18 @@ impl Center {
         }
     }
 
-    pub(crate) fn position(&self) -> Option<Position> {
+    /// Returns exact position if map is detached (i.e. not following `my_position`),
+    /// `None` otherwise.
+    pub(crate) fn detached(&self, projector: &impl ProjectorTrait) -> Option<Position> {
+        self.adjusted_position().map(|p| projector.position(p))
+    }
+
+    /// Get the real position at the map's center.
+    pub fn position(&self, my_position: Position, projector: &impl ProjectorTrait) -> Position {
+        self.detached(projector).unwrap_or(my_position)
+    }
+
+    pub(crate) fn adjusted_position(&self) -> Option<AdjustedPosition> {
         match self {
             Center::MyPosition => None,
             Center::Exact { pos } | Center::Moving { pos, .. } | Center::Inertia { pos, .. } => {
