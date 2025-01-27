@@ -1,9 +1,6 @@
 use egui::{Response, Vec2};
 
-use crate::{
-    projector::ProjectorTrait,
-    units::{AdjustedPosition, Position},
-};
+use crate::units::{AdjustedPosition, Position};
 
 /// Position at the map's center. Initially, the map follows `my_position` argument which typically
 /// is meant to be fed by a GPS sensor or other geo-localization method. If user drags the map,
@@ -37,7 +34,7 @@ impl Center {
         if response.dragged_by(egui::PointerButton::Primary) {
             *self = Center::Moving {
                 pos: self
-                    .adjusted_position()
+                    .get_adjusted_position()
                     .unwrap_or(AdjustedPosition::new(my_position, Default::default())),
                 direction: response.drag_delta(),
             };
@@ -45,7 +42,7 @@ impl Center {
         } else if response.drag_stopped() {
             if let Center::Moving { pos, direction } = &self {
                 *self = Center::Inertia {
-                    pos: pos.to_owned(),
+                    pos: pos.clone(),
                     direction: *direction,
                     amount: 1.0,
                 };
@@ -78,6 +75,7 @@ impl Center {
                     let delta = *direction * *amount;
 
                     *pos = pos.clone().shift(delta);
+                    *amount -= 0.03;
                 };
                 true
             }
@@ -85,45 +83,12 @@ impl Center {
         }
     }
 
-    /// Returns exact position if map is detached (i.e. not following `my_position`),
-    /// `None` otherwise.
-    pub(crate) fn detached(&self, projector: &impl ProjectorTrait) -> Option<Position> {
-        self.adjusted_position().map(|p| projector.position(p))
-    }
-
-    /// Get the real position at the map's center.
-    pub fn position(&self, my_position: Position, projector: &impl ProjectorTrait) -> Position {
-        self.detached(projector).unwrap_or(my_position)
-    }
-
-    pub(crate) fn adjusted_position(&self) -> Option<AdjustedPosition> {
+    pub(crate) fn get_adjusted_position(&self) -> Option<AdjustedPosition> {
         match self {
             Center::MyPosition => None,
             Center::Exact { pos } | Center::Moving { pos, .. } | Center::Inertia { pos, .. } => {
                 Some(pos.to_owned())
             }
-        }
-    }
-
-    pub fn zero_offset(self, projector: &impl ProjectorTrait) -> Self {
-        match self {
-            Center::MyPosition => Center::MyPosition,
-            Center::Exact { pos } => Center::Exact {
-                pos: projector.zero_offset(pos),
-            },
-            Center::Moving { pos, direction } => Center::Moving {
-                pos: projector.zero_offset(pos),
-                direction,
-            },
-            Center::Inertia {
-                pos,
-                direction,
-                amount,
-            } => Center::Inertia {
-                pos: projector.zero_offset(pos),
-                direction,
-                amount,
-            },
         }
     }
 
@@ -147,6 +112,64 @@ impl Center {
                 direction,
                 amount,
             },
+        }
+    }
+
+    pub(crate) fn global_zero_offset(self, zoom: f64) -> Center {
+        match self {
+            Center::MyPosition => Center::MyPosition,
+            Center::Exact { pos } => Center::Exact {
+                pos: pos.global_zero_offset(zoom),
+            },
+            Center::Moving { pos, direction } => Center::Moving {
+                pos: pos.global_zero_offset(zoom),
+                direction,
+            },
+            Center::Inertia {
+                pos,
+                direction,
+                amount,
+            } => Center::Inertia {
+                pos: pos.global_zero_offset(zoom),
+                direction,
+                amount,
+            },
+        }
+    }
+
+    pub(crate) fn local_zero_offset(self, zoom: f64) -> Center {
+        match self {
+            Center::MyPosition => Center::MyPosition,
+            Center::Exact { pos } => Center::Exact {
+                pos: pos.local_zero_offset(zoom),
+            },
+            Center::Moving { pos, direction } => Center::Moving {
+                pos: pos.local_zero_offset(zoom),
+                direction,
+            },
+            Center::Inertia {
+                pos,
+                direction,
+                amount,
+            } => Center::Inertia {
+                pos: pos.local_zero_offset(zoom),
+                direction,
+                amount,
+            },
+        }
+    }
+
+    pub(crate) fn global_position(&self, my_position: Position, zoom: f64) -> Position {
+        match self.get_adjusted_position() {
+            Some(adj_pos) => adj_pos.global_unadjusted_position(zoom),
+            None => my_position,
+        }
+    }
+
+    pub(crate) fn local_position(&self, my_position: Position, zoom: f64) -> Position {
+        match self.get_adjusted_position() {
+            Some(adj_pos) => adj_pos.local_unadjusted_position(zoom),
+            None => my_position,
         }
     }
 }

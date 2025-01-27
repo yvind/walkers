@@ -2,19 +2,18 @@ use egui::{PointerButton, Response, Sense, Ui, UiBuilder, Vec2, Widget};
 
 use crate::{
     center::Center,
-    projector::{LocalProjector, Projector, ProjectorTrait},
+    projector::{Projector, ProjectorType},
     units::{AdjustedPosition, Position},
-    InvalidZoom, MapMemory, Plugin,
+    MapMemory, Plugin,
 };
 
 /// Actual map widget, but with a blank map and in arbitrary coordinates. Instances
 /// are to be created on each frame, as all necessary state is stored in [`MapMemory`].
 pub struct LocalMap<'a, 'b> {
-    memory: &'a mut MapMemory,
-    my_position: Position,
     plugins: Vec<Box<dyn Plugin + 'b>>,
 
-    projector: Projector,
+    my_position: Position,
+    memory: &'a mut MapMemory,
     zoom_gesture_enabled: bool,
     drag_gesture_enabled: bool,
     zoom_speed: f64,
@@ -25,12 +24,11 @@ pub struct LocalMap<'a, 'b> {
 
 impl<'a, 'b> LocalMap<'a, 'b> {
     pub fn new(memory: &'a mut MapMemory, my_position: Position) -> Self {
-        let projector = Projector::Local(LocalProjector::new(memory, my_position));
+        memory.projection_type = ProjectorType::Local;
         Self {
+            plugins: Vec::default(),
             memory,
             my_position,
-            plugins: Vec::default(),
-            projector,
             zoom_gesture_enabled: true,
             drag_gesture_enabled: true,
             zoom_speed: 2.0,
@@ -73,40 +71,6 @@ impl<'a, 'b> LocalMap<'a, 'b> {
     pub fn zoom_with_ctrl(mut self, enabled: bool) -> Self {
         self.zoom_with_ctrl = enabled;
         self
-    }
-
-    pub fn zoom(&self) -> f64 {
-        self.memory.zoom()
-    }
-
-    pub fn zoom_in(&mut self) -> Result<(), InvalidZoom> {
-        self.memory.zoom_in(&self.projector)
-    }
-
-    /// Try to zoom out, returning `Err(InvalidZoom)` if already at minimum.
-    pub fn zoom_out(&mut self) -> Result<(), InvalidZoom> {
-        self.memory.zoom_out(&self.projector)
-    }
-
-    /// Set exact zoom level
-    pub fn set_zoom(&mut self, zoom: f64) -> Result<(), InvalidZoom> {
-        self.memory.set_zoom(zoom, &self.projector)
-    }
-
-    /// Returns exact position if map is detached (i.e. not following `my_position`),
-    /// `None` otherwise.
-    pub fn detached(&self) -> Option<Position> {
-        self.memory.detached(&self.projector)
-    }
-
-    /// Center exactly at the given position.
-    pub fn center_at(&mut self, pos: Position) {
-        self.memory.center_at(pos);
-    }
-
-    /// Follow `my_position`.
-    pub fn follow_my_position(&mut self) {
-        self.memory.follow_my_position();
     }
 }
 
@@ -151,7 +115,7 @@ impl LocalMap<'_, '_> {
             let pos = self
                 .memory
                 .center_mode
-                .position(self.my_position, &self.projector);
+                .local_position(self.my_position, self.memory.zoom());
 
             // While zooming, we want to keep the location under the mouse pointer fixed on the
             // screen. To achieve this, we first move the location to the widget's center,
@@ -159,9 +123,8 @@ impl LocalMap<'_, '_> {
             // position.
             if let Some(offset) = offset {
                 self.memory.center_mode = Center::Exact {
-                    pos: self
-                        .projector
-                        .zero_offset(AdjustedPosition::from(pos).shift(-offset)),
+                    pos: (AdjustedPosition::from(pos).shift(-offset))
+                        .local_zero_offset(self.memory.zoom()),
                 };
             }
 
@@ -172,7 +135,11 @@ impl LocalMap<'_, '_> {
                 .zoom_by((zoom_delta - 1.) * self.zoom_speed);
 
             // Recalculate the AdjustedPosition's offset, since it gets invalidated by zooming.
-            self.memory.center_mode = self.memory.center_mode.clone().zero_offset(&self.projector);
+            self.memory.center_mode = self
+                .memory
+                .center_mode
+                .clone()
+                .local_zero_offset(self.memory.zoom());
 
             if let Some(offset) = offset {
                 self.memory.center_mode = self.memory.center_mode.clone().shift(offset);
@@ -196,7 +163,7 @@ impl LocalMap<'_, '_> {
                 let pos = self
                     .memory
                     .center_mode
-                    .position(self.my_position, &self.projector);
+                    .local_position(self.my_position, self.memory.zoom());
                 self.memory.center_mode = Center::Exact {
                     pos: AdjustedPosition::from(pos).shift(scroll_delta),
                 };
@@ -211,7 +178,6 @@ impl Widget for LocalMap<'_, '_> {
     fn ui(mut self, ui: &mut Ui) -> Response {
         let (rect, mut response) =
             ui.allocate_exact_size(ui.available_size(), Sense::click_and_drag());
-        self.projector.set_clip_rect(rect);
 
         let mut moved = self.handle_gestures(ui, &response);
         moved |= self.memory.center_mode.update_movement();
@@ -228,9 +194,10 @@ impl Widget for LocalMap<'_, '_> {
             egui::Stroke::NONE,
         );
 
+        let projector = Projector::new(self.memory, rect, self.my_position);
         for (idx, plugin) in self.plugins.into_iter().enumerate() {
             let mut child_ui = ui.new_child(UiBuilder::new().max_rect(rect).id_salt(idx));
-            plugin.run(&mut child_ui, &response, &self.projector);
+            plugin.run(&mut child_ui, &response, &projector);
         }
 
         response
