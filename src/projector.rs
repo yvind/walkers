@@ -94,10 +94,6 @@ impl<'a> Projector<'a> {
     }
 
     pub fn scale_pixel_per_meter(&self, pos: Position) -> f32 {
-        let zoom = self.memory.zoom();
-        match self.memory.projection_type {
-            ProjectorType::Global => pos.global_scale_pixel_per_meter(zoom),
-            ProjectorType::Local => pos.local_scale_pixel_per_meter(zoom),
-        }
+        self.memory.scale_pixel_per_meter(pos)
     }
 }

@@ -70,4 +70,12 @@ impl MapMemory {
             ProjectorType::Local => Some(adj_pos.local_unadjusted_position(self.zoom())),
         }
     }
+
+    pub fn scale_pixel_per_meter(&self, pos: Position) -> f32 {
+        let zoom = self.zoom();
+        match self.projection_type {
+            ProjectorType::Global => pos.global_scale_pixel_per_meter(zoom),
+            ProjectorType::Local => pos.local_scale_pixel_per_meter(zoom),
+        }
+    }
 }
