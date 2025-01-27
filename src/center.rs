@@ -56,9 +56,7 @@ impl Center {
     pub(crate) fn update_movement(&mut self) -> bool {
         match self {
             Center::Moving { pos, direction } => {
-                let delta = *direction;
-
-                *pos = pos.clone().shift(delta);
+                *pos = pos.clone().shift(*direction);
 
                 true
             }
@@ -72,9 +70,7 @@ impl Center {
                         pos: pos.to_owned(),
                     }
                 } else {
-                    let delta = *direction * *amount;
-
-                    *pos = pos.clone().shift(delta);
+                    *pos = pos.clone().shift(*direction * *amount);
                     *amount -= 0.03;
                 };
                 true

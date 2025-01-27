@@ -61,6 +61,7 @@ impl MapMemory {
         self.center_mode = Center::MyPosition;
     }
 
+    /// Get the true position of the map center if following my position else None
     pub fn detached(&self) -> Option<Position> {
         let adj_pos = self.center_mode.get_adjusted_position()?;
 
