@@ -25,6 +25,7 @@ pub struct LocalMap<'a, 'b> {
 impl<'a, 'b> LocalMap<'a, 'b> {
     pub fn new(memory: &'a mut MapMemory, my_position: Position) -> Self {
         memory.projection_type = ProjectorType::Local;
+
         Self {
             plugins: Vec::default(),
             memory,

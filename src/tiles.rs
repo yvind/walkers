@@ -258,8 +258,8 @@ pub struct TileId {
 
 impl TileId {
     /// Tile position (in pixels) on the "World bitmap".
-    pub fn tile_pos(&self, tile_size: f32) -> egui::Pos2 {
-        egui::Pos2::new(self.x as f32 * tile_size, self.y as f32 * tile_size)
+    pub fn tile_pos(&self, tile_size: f64) -> Pixel {
+        Pixel::new(self.x as f64 * tile_size, self.y as f64 * tile_size)
     }
 
     pub fn east(&self) -> Option<TileId> {
@@ -306,9 +306,9 @@ pub(crate) fn flood_fill_tiles(
 ) {
     // We need to make up the difference between integer and floating point zoom levels.
     let corrected_tile_size = tiles.tile_size() as f64 * 2f64.powf(zoom - zoom.round());
-    let tile_projected = tile_id.tile_pos(corrected_tile_size as f32);
+    let tile_projected = tile_id.tile_pos(corrected_tile_size);
     let tile_screen_position =
-        viewport.center() + (tile_projected - egui::Pos2::from(map_center_projected_position));
+        viewport.center() + (tile_projected - map_center_projected_position).into();
 
     if viewport.intersects(rect(tile_screen_position, corrected_tile_size)) {
         if let Entry::Vacant(entry) = meshes.entry(tile_id) {

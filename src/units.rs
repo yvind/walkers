@@ -240,11 +240,11 @@ impl AdjustedPosition {
     }
 
     pub(crate) fn global_unadjusted_position(&self, zoom: f64) -> Position {
-        (self.position.global_bitmap_project(zoom) + self.offset).global_bitmap_unproject(zoom)
+        (self.position.global_bitmap_project(zoom) - self.offset).global_bitmap_unproject(zoom)
     }
 
     pub(crate) fn local_unadjusted_position(&self, zoom: f64) -> Position {
-        (self.position.local_bitmap_project(zoom) + self.offset).local_bitmap_unproject(zoom)
+        (self.position.local_bitmap_project(zoom) - self.offset).local_bitmap_unproject(zoom)
     }
 
     pub(crate) fn global_zero_offset(self, zoom: f64) -> Self {

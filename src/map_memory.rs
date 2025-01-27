@@ -21,7 +21,7 @@ impl MapMemory {
 
     pub fn zoom_in(&mut self) -> Result<(), InvalidZoom> {
         let zoom = self.zoom();
-        match self.projection_type {
+        self.center_mode = match self.projection_type {
             ProjectorType::Global => self.center_mode.clone().global_zero_offset(zoom),
             ProjectorType::Local => self.center_mode.clone().local_zero_offset(zoom),
         };
@@ -31,7 +31,7 @@ impl MapMemory {
     /// Try to zoom out, returning `Err(InvalidZoom)` if already at minimum.
     pub fn zoom_out(&mut self) -> Result<(), InvalidZoom> {
         let zoom = self.zoom();
-        match self.projection_type {
+        self.center_mode = match self.projection_type {
             ProjectorType::Global => self.center_mode.clone().global_zero_offset(zoom),
             ProjectorType::Local => self.center_mode.clone().local_zero_offset(zoom),
         };
@@ -41,7 +41,7 @@ impl MapMemory {
     /// Set exact zoom level
     pub fn set_zoom(&mut self, new_zoom: f64) -> Result<(), InvalidZoom> {
         let zoom = self.zoom();
-        match self.projection_type {
+        self.center_mode = match self.projection_type {
             ProjectorType::Global => self.center_mode.clone().global_zero_offset(zoom),
             ProjectorType::Local => self.center_mode.clone().local_zero_offset(zoom),
         };

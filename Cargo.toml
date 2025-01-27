@@ -1,11 +1,11 @@
 [package]
-name = "local_walkers"
+name = "walkers"
 version = "0.33.0"
 repository = "https://github.com/oyhj1801/walkers"
 description = "slippy map widget for egui with support for a blank map in local coordinates"
 keywords = ["gis", "geography", "gui"]
 categories = ["gui", "science::geo"]
-authors = ["Piotr Podusowski <podusowski@gmail.com>, Øyvind Hjermstad <@oyhj1801>"]
+authors = ["Piotr Podusowski <podusowski@gmail.com>"]
 license = "MIT"
 edition = "2021"
 
