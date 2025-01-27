@@ -52,13 +52,13 @@ impl Position {
     }
 
     pub(crate) fn global_bitmap_project(&self, zoom: f64) -> Pixel {
-        let total_pixels = total_pixels(zoom);
+        let total_pixels = crate::total_pixels(zoom);
         let (x, y) = self.mercator_normalized();
         Pixel::new(x * total_pixels, y * total_pixels)
     }
 
     pub(crate) fn local_bitmap_project(&self, zoom: f64) -> Pixel {
-        let units_per_point = local_units_per_point(zoom);
+        let units_per_point = crate::local_units_per_point(zoom);
 
         Pixel::new(self.x() / units_per_point, -self.y() / units_per_point)
     }
@@ -77,35 +77,6 @@ impl Position {
 
         TileId { x, y, zoom }
     }
-
-    pub(crate) fn global_scale_pixel_per_meter(&self, zoom: f64) -> f32 {
-        const EARTH_CIRCUMFERENCE: f64 = 40_075_016.686;
-
-        // Number of pixels for width of world at this zoom level
-        let total_pixels = total_pixels(zoom);
-
-        let pixel_per_meter_equator = total_pixels / EARTH_CIRCUMFERENCE;
-        let latitude_rad = self.lat().abs().to_radians();
-        (pixel_per_meter_equator / latitude_rad.cos()) as f32
-    }
-
-    pub(crate) fn local_scale_pixel_per_meter(&self, zoom: f64) -> f32 {
-        local_units_per_point(zoom) as f32
-    }
-}
-
-// zoom level   tile coverage  number of tiles  tile size(*) in degrees
-// 0            1 tile         1 tile           360° x 170.1022°
-// 1            2 × 2 tiles    4 tiles          180° x 85.0511°
-// 2            4 × 4 tiles    16 tiles         90° x [variable]
-/// Zoom specifies how many pixels are in the whole map. For example, zoom 0 means that the whole
-/// map is just one 256x256 tile, zoom 1 means that it is 2x2 tiles, and so on.
-pub(crate) fn total_pixels(zoom: f64) -> f64 {
-    2f64.powf(zoom) * (crate::TILE_SIZE as f64)
-}
-
-pub(crate) fn local_units_per_point(zoom: f64) -> f64 {
-    0.001 * 2_f64.powf(20. - zoom)
 }
 
 impl From<geo_types::Point> for Position {
@@ -138,7 +109,7 @@ impl Pixel {
     }
 
     pub(crate) fn global_bitmap_unproject(&self, zoom: f64) -> Position {
-        let number_of_pixels: f64 = 2f64.powf(zoom) * (crate::TILE_SIZE as f64);
+        let number_of_pixels = crate::total_pixels(zoom);
 
         let lon = self.x();
         let lon = lon / number_of_pixels;
@@ -154,7 +125,7 @@ impl Pixel {
     }
 
     pub(crate) fn local_bitmap_unproject(&self, zoom: f64) -> Position {
-        let units_per_point = local_units_per_point(zoom);
+        let units_per_point = crate::local_units_per_point(zoom);
 
         Position::new(self.x() * units_per_point, -self.y() * units_per_point)
     }

@@ -12,10 +12,10 @@ use crate::{
 /// The actual map widget. Instances are to be created on each frame, as all necessary state is
 /// stored in [`Tiles`] and [`MapMemory`].
 pub struct Map<'a, 'b, 'c> {
-    tiles: Option<&'b mut dyn Tiles>,
+    tiles: Option<&'c mut dyn Tiles>,
     memory: &'a mut MapMemory,
     my_position: Position,
-    plugins: Vec<Box<dyn Plugin + 'c>>,
+    plugins: Vec<Box<dyn Plugin + 'b>>,
 
     zoom_gesture_enabled: bool,
     drag_gesture_enabled: bool,
@@ -27,7 +27,7 @@ pub struct Map<'a, 'b, 'c> {
 
 impl<'a, 'b, 'c> Map<'a, 'b, 'c> {
     pub fn new(
-        tiles: Option<&'b mut dyn Tiles>,
+        tiles: Option<&'c mut dyn Tiles>,
         memory: &'a mut MapMemory,
         my_position: Position,
     ) -> Self {
@@ -47,8 +47,7 @@ impl<'a, 'b, 'c> Map<'a, 'b, 'c> {
         }
     }
 
-    /// Add plugin to the drawing pipeline. Plugins allow drawing custom shapes on the map.
-    pub fn with_plugin(mut self, plugin: impl Plugin + 'c) -> Self {
+    pub fn with_plugin(mut self, plugin: impl Plugin + 'b) -> Self {
         self.plugins.push(Box::new(plugin));
         self
     }

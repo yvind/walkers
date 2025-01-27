@@ -14,6 +14,13 @@ pub struct MapMemory {
 }
 
 impl MapMemory {
+    pub fn is_global(&self) -> bool {
+        match self.projection_type {
+            ProjectorType::Global => true,
+            ProjectorType::Local => false,
+        }
+    }
+
     /// Returns the current zoom level
     pub fn zoom(&self) -> f64 {
         self.zoom.into()
@@ -74,8 +81,22 @@ impl MapMemory {
     pub fn scale_pixel_per_meter(&self, pos: Position) -> f32 {
         let zoom = self.zoom();
         match self.projection_type {
-            ProjectorType::Global => pos.global_scale_pixel_per_meter(zoom),
-            ProjectorType::Local => pos.local_scale_pixel_per_meter(zoom),
+            ProjectorType::Global => global_scale_pixel_per_meter(pos, zoom),
+            ProjectorType::Local => local_scale_pixel_per_meter(zoom),
         }
     }
+}
+
+pub(crate) fn global_scale_pixel_per_meter(pos: Position, zoom: f64) -> f32 {
+    const EARTH_CIRCUMFERENCE: f64 = 40_075_016.686;
+    let latitude_circumference = EARTH_CIRCUMFERENCE * pos.lat().abs().to_radians().cos();
+
+    // Number of pixels for width of world at this zoom level and latitude
+    let total_pixels = crate::total_pixels(zoom);
+    let pixel_per_meter_equator = total_pixels / latitude_circumference;
+    pixel_per_meter_equator as f32
+}
+
+pub(crate) fn local_scale_pixel_per_meter(zoom: f64) -> f32 {
+    (1. / crate::local_units_per_point(zoom)) as f32
 }
