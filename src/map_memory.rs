@@ -60,4 +60,13 @@ impl MapMemory {
     pub fn follow_my_position(&mut self) {
         self.center_mode = Center::MyPosition;
     }
+
+    pub fn detached(&self) -> Option<Position> {
+        let adj_pos = self.center_mode.get_adjusted_position()?;
+
+        match self.projection_type {
+            ProjectorType::Global => Some(adj_pos.global_unadjusted_position(self.zoom())),
+            ProjectorType::Local => Some(adj_pos.local_unadjusted_position(self.zoom())),
+        }
+    }
 }
