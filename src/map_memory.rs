@@ -89,7 +89,7 @@ impl MapMemory {
 
 pub(crate) fn global_scale_pixel_per_meter(pos: Position, zoom: f64) -> f32 {
     const EARTH_CIRCUMFERENCE: f64 = 40_075_016.686;
-    let latitude_circumference = EARTH_CIRCUMFERENCE * pos.lat().abs().to_radians().cos();
+    let latitude_circumference = EARTH_CIRCUMFERENCE * pos.y.abs().to_radians().cos();
 
     // Number of pixels for width of world at this zoom level and latitude
     let total_pixels = crate::total_pixels(zoom);

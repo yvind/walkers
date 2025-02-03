@@ -5,7 +5,7 @@ use crate::{
     map_memory::MapMemory,
     projector::{Projector, ProjectorType},
     tiles::flood_fill_tiles,
-    units::{AdjustedPosition, Position},
+    units::{AdjustedPosition, Position, PositionTrait},
     Plugin, Tiles,
 };
 

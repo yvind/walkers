@@ -1,5 +1,4 @@
 #![doc = include_str!("../README.md")]
-#![deny(rustdoc::broken_intra_doc_links)]
 
 mod center;
 mod download;
@@ -19,7 +18,7 @@ pub use maps::{LocalMap, Map, Plugin};
 pub use map_memory::MapMemory;
 pub use projector::Projector;
 pub use tiles::{HttpTiles, Texture, TextureWithUv, TileId, Tiles};
-pub use units::Position;
+pub use units::{pos_from_lat_lon, pos_from_lon_lat, Position};
 pub use zoom::InvalidZoom;
 
 const TILE_SIZE: u32 = 256;

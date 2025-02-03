@@ -1,6 +1,6 @@
 use crate::{
     map_memory::MapMemory,
-    units::{AdjustedPosition, Position},
+    units::{AdjustedPosition, Position, PositionTrait},
 };
 
 /// A Projector relates Positions to screen coordinates
@@ -43,8 +43,9 @@ impl<'a> Projector<'a> {
                     .global_position(self.my_position, zoom)
                     .global_bitmap_project(zoom);
 
-                egui::Pos2::from(bm_pos - map_center_projected_position)
-                    + self.clip_rect.center().to_vec2()
+                let shift = bm_pos - map_center_projected_position;
+
+                self.clip_rect.center() + egui::Vec2::new(shift.x as f32, shift.y as f32)
             }
             ProjectorType::Local => {
                 let bm_pos = pos.local_bitmap_project(zoom);
@@ -55,8 +56,9 @@ impl<'a> Projector<'a> {
                     .local_position(self.my_position, zoom)
                     .local_bitmap_project(zoom);
 
-                egui::Pos2::from(bm_pos - map_center_projected_position)
-                    + self.clip_rect.center().to_vec2()
+                let shift = bm_pos - map_center_projected_position;
+
+                self.clip_rect.center() + egui::Vec2::new(shift.x as f32, shift.y as f32)
             }
         }
     }
