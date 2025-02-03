@@ -13,7 +13,7 @@ mod units;
 mod zoom;
 
 pub use download::{HeaderValue, HttpOptions};
-pub use maps::{LocalMap, Map, Plugin};
+pub use maps::{LocalMap, Map, Maps, Plugin};
 
 pub use map_memory::MapMemory;
 pub use projector::Projector;
