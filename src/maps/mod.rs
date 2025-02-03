@@ -21,6 +21,9 @@ pub trait Plugin {
     fn run(self: Box<Self>, ui: &mut egui::Ui, response: &egui::Response, projector: &Projector);
 }
 
+/// Wrap your map in the Maps enum to be able to return
+/// the two different maps from different if branches.
+/// Interactable in the exact same way as the "naked" maps
 pub enum Maps<'a, 'b, 'c> {
     Map(Map<'a, 'b, 'c>),
     LocalMap(LocalMap<'a, 'b>),
