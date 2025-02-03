@@ -64,6 +64,8 @@ impl<'a> Projector<'a> {
     }
 
     pub fn unproject(&self, screen_pos: egui::Pos2) -> Position {
+        let screen_pos = screen_pos - self.clip_rect.center();
+
         let zoom = self.memory.zoom();
         match self.memory.projection_type {
             ProjectorType::Global => {
@@ -76,7 +78,7 @@ impl<'a> Projector<'a> {
                     position: center,
                     offset: Default::default(),
                 }
-                .shift(-screen_pos.to_vec2())
+                .shift(-screen_pos)
                 .global_unadjusted_position(zoom)
             }
             ProjectorType::Local => {
@@ -89,7 +91,7 @@ impl<'a> Projector<'a> {
                     position: center,
                     offset: Default::default(),
                 }
-                .shift(-screen_pos.to_vec2())
+                .shift(-screen_pos)
                 .local_unadjusted_position(zoom)
             }
         }
