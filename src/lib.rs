@@ -5,7 +5,7 @@ mod download;
 pub mod extras;
 mod io;
 mod map_memory;
-mod maps;
+pub mod maps;
 mod projector;
 pub mod sources;
 mod tiles;

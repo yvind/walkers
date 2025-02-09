@@ -236,12 +236,8 @@ impl Widget for Map<'_, '_, '_> {
                 painter.add(shape);
             }
         } else {
-            ui.painter().rect(
-                rect,
-                0.,
-                egui::Color32::from_rgb(225, 225, 220),
-                egui::Stroke::NONE,
-            );
+            ui.painter()
+                .rect(rect, 0., super::BACKGROUND_COLOR, egui::Stroke::NONE);
         }
 
         let projector = Projector::new(self.memory, rect, self.my_position);
