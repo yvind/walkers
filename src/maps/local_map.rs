@@ -188,9 +188,6 @@ impl Widget for LocalMap<'_, '_> {
             ui.ctx().request_repaint();
         }
 
-        ui.painter()
-            .rect(rect, 0., super::BACKGROUND_COLOR, egui::Stroke::NONE);
-
         let projector = Projector::new(self.memory, rect, self.my_position);
         for (idx, plugin) in self.plugins.into_iter().enumerate() {
             let mut child_ui = ui.new_child(UiBuilder::new().max_rect(rect).id_salt(idx));

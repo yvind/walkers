@@ -235,9 +235,6 @@ impl Widget for Map<'_, '_, '_> {
             for shape in meshes.drain().filter_map(|(_, mesh)| mesh) {
                 painter.add(shape);
             }
-        } else {
-            ui.painter()
-                .rect(rect, 0., super::BACKGROUND_COLOR, egui::Stroke::NONE);
         }
 
         let projector = Projector::new(self.memory, rect, self.my_position);

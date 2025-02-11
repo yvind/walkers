@@ -4,8 +4,6 @@ mod local_map;
 pub use global_map::Map;
 pub use local_map::LocalMap;
 
-pub const BACKGROUND_COLOR: egui::Color32 = egui::Color32::from_rgb(225, 225, 220);
-
 use crate::Projector;
 
 /// Plugins allow drawing custom shapes on the map. After implementing this trait for your type,
