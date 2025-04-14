@@ -1,6 +1,6 @@
 [package]
 name = "walkers"
-version = "0.33.0"
+version = "0.33.1"
 repository = "https://github.com/oyhj1801/walkers"
 description = "slippy map widget for egui with support for a blank map in local coordinates"
 keywords = ["gis", "geography", "gui"]
@@ -11,8 +11,8 @@ edition = "2021"
 
 [dependencies]
 log = "0.4"
-egui = "0.30"
-egui_extras = { version = "0.30.0", features = ["svg"] }
+egui = "0.31.1"
+egui_extras = { version = "0.31.1", features = ["svg"] }
 lru = "0.12"
 thiserror = "2"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }

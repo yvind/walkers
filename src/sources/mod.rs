@@ -3,6 +3,7 @@
 mod geoportal;
 mod mapbox;
 mod openstreetmap;
+mod opentopomap;
 
 use crate::tiles::TileId;
 pub use geoportal::Geoportal;
