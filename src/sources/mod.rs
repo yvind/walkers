@@ -9,7 +9,7 @@ use crate::tiles::TileId;
 pub use geoportal::Geoportal;
 pub use mapbox::{Mapbox, MapboxStyle};
 pub use openstreetmap::OpenStreetMap;
-pub use opentopomap::OpenTopoMap;
+pub use opentopomap::{OpenTopoMap, OpenTopoServer};
 
 #[derive(Clone)]
 pub struct Attribution {
