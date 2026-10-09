@@ -1,4 +1,4 @@
-use egui::{Rect, Vec2};
+use egui::{Pos2, Rect};
 
 use crate::{
     MapMemory, Position, equal_earth, mercator,
@@ -192,12 +192,13 @@ impl<'a, P: Projection> Projector<'a, P> {
 }
 
 impl<P: Projection> Projector<'_, P> {
-    pub fn project(&self, position: Position) -> Vec2 {
+    pub fn project(&self, position: Position) -> Pos2 {
         let projected = self.projection.position_to_pixels(position, self.zoom);
-        self.clip_rect.center().to_vec2() + (projected - self.center_projected).to_vec2()
+        (self.clip_rect.center().to_vec2() + (projected - self.center_projected).to_vec2())
+            .to_pos2()
     }
 
-    pub fn unproject(&self, screen_position: Vec2) -> Position {
+    pub fn unproject(&self, screen_position: Pos2) -> Position {
         let x = self.center_projected.x() + (screen_position.x as f64)
             - (self.clip_rect.center().x as f64);
         let y = self.center_projected.y() + (screen_position.y as f64)

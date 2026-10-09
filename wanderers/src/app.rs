@@ -241,7 +241,7 @@ impl eframe::App for Wanderers {
                 // cluster while it is still being named.
                 if let Some(position) = pending {
                     ui.painter().circle_filled(
-                        projector.project(position).to_pos2(),
+                        projector.project(position),
                         7.,
                         Color32::from_rgb(0xE0, 0x6C, 0x00),
                     );
@@ -254,7 +254,7 @@ impl eframe::App for Wanderers {
 
                 response
                     .interact_pointer_pos()
-                    .map(|clicked_at| projector.unproject(clicked_at.to_vec2()))
+                    .map(|clicked_at| projector.unproject(clicked_at))
             })
             .inner;
 

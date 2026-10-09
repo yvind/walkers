@@ -81,7 +81,7 @@ impl eframe::App for MyApp {
             }
 
             // You can add any additional contents to the map's UI here.
-            let bastion = projector.project(places::bastion_sakwowy()).to_pos2();
+            let bastion = projector.project(places::bastion_sakwowy());
             ui.put(
                 Rect::from_center_size(bastion, Vec2::new(140., 20.)),
                 Button::new("Bastion Sakwowy"),
