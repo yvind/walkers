@@ -279,7 +279,7 @@ impl Group for DemoClusterGroup {
         ui: &mut egui::Ui,
     ) {
         let count = places.len();
-        let screen = projector.project(position).to_pos2();
+        let screen = projector.project(position);
         let painter = ui.painter();
 
         let (fill, stroke_color) = cluster_palette(count);

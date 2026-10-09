@@ -79,7 +79,7 @@ where
         id: Id,
     ) -> bool {
         let screen_position = projector.project(position);
-        let rect = Rect::from_center_size(screen_position.to_pos2(), vec2(50., 50.));
+        let rect = Rect::from_center_size(screen_position, vec2(50., 50.));
         let response = ui.interact(rect, id, Sense::click());
 
         if response.clicked() {
@@ -146,8 +146,8 @@ fn distance_projected<P: Projection>(
     p2: Position,
     projector: &Projector<'_, P>,
 ) -> f32 {
-    let screen_p1 = projector.project(p1).to_pos2();
-    let screen_p2 = projector.project(p2).to_pos2();
+    let screen_p1 = projector.project(p1);
+    let screen_p2 = projector.project(p2);
     (screen_p1 - screen_p2).length()
 }
 
@@ -214,7 +214,7 @@ fn interact_cluster<P: Projection>(
     cluster_id: egui::Id,
     hitbox_px: f32,
 ) -> bool {
-    let screen = projector.project(center).to_pos2();
+    let screen = projector.project(center);
     let rect = egui::Rect::from_center_size(screen, egui::vec2(hitbox_px, hitbox_px));
     let resp = ui.interact(rect, cluster_id, egui::Sense::click());
 
@@ -426,7 +426,7 @@ impl<T: Place, G: Group, P: Projection> GroupedPlacesTree<T, G, P> {
             cache.resize(self.places.len(), egui::Pos2::new(0.0, 0.0));
         }
         for (pos, place) in cache.iter_mut().zip(self.places.iter()) {
-            *pos = projector.project(place.position()).to_pos2();
+            *pos = projector.project(place.position());
         }
         self.visit_clusters_with_cache(
             response.rect,
@@ -465,7 +465,7 @@ impl<T: Place, G: Group, P: Projection> GroupedPlacesTree<T, G, P> {
             cache.resize(self.places.len(), egui::Pos2::new(0.0, 0.0));
         }
         for (pos, place) in cache.iter_mut().zip(self.places.iter()) {
-            *pos = projector.project(place.position()).to_pos2();
+            *pos = projector.project(place.position());
         }
         self.visit_clusters_with_cache(rect, projector.zoom(), &cache, |_, members, _| {
             clusters += 1;

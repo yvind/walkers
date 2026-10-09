@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+* `Projector::project` returns `egui::Pos2` and `Projector::unproject` accepts `egui::Pos2` for screen positions.
 * The map and its `MapMemory` now have a generic `Projection` parameter. Pass the projection to `MapMemory::new`, then pass that memory to `Map::new`. Use `Map::with_layer` to add tile layers.
 * New `Projection` trait with three built-in implementations.
 * `Plugin::run` no longer receives `&MapMemory`; it receives `&Projector` instead.

@@ -82,7 +82,7 @@ fn draw_line_geometry<P: Projection>(
                 .outer
                 .coords
                 .iter()
-                .map(|c| projector.project(lon_lat(c.x, c.y)).to_pos2())
+                .map(|c| projector.project(lon_lat(c.x, c.y)))
                 .collect();
 
             painter.add(Shape::closed_line(exterior, stroke));
@@ -91,7 +91,7 @@ fn draw_line_geometry<P: Projection>(
                 let hole: Vec<_> = inner
                     .coords
                     .iter()
-                    .map(|c| projector.project(lon_lat(c.x, c.y)).to_pos2())
+                    .map(|c| projector.project(lon_lat(c.x, c.y)))
                     .collect();
 
                 painter.add(Shape::closed_line(hole, stroke));
@@ -113,9 +113,7 @@ fn draw_circle_geometry<P: Projection>(
 ) {
     match geometry {
         kml::types::Geometry::Point(point) => {
-            let center = projector
-                .project(lon_lat(point.coord.x, point.coord.y))
-                .to_pos2();
+            let center = projector.project(lon_lat(point.coord.x, point.coord.y));
             let radius = 5.0;
             let stroke = Stroke::new(1.0, Color32::BLACK);
             let fill = Color32::from_rgb(0, 255, 0);
